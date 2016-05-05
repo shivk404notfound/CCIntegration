@@ -1,0 +1,292 @@
+<?xml version="1.0" ?>
+<!--
+ ******************************************************************************************
+ *	Integration Project Build Script
+ *
+ *  Author:  Shivanand Kumbhar
+ *
+ *  Available Targets:
+ *		-     'clean' - (Cleans the output directory.)
+ *		-     'compile' - (Compile the java source code.)
+ *		-     'jar' - (Generate the java application archive (JAR).)
+ *		-     'war' - (Generate the web application archive (WAR).)
+ *		-     'build-all-deploy-jar' - (Build the artifacts and deploy jars.)
+ *		-     'build-and-test-all-deploy-jar' - (Build the artifacts and deploy jars with tests.)
+ *		-     'test' - (Run unit test cases.)
+ *		-     'javadoc' - (Generate javadocs.)
+ *		-     'release' - (copies integration.jar to 	ClaimCenter and check in teh file)
+ ******************************************************************************************
+ -->
+<project name="Integration" default="usage" basedir=".">
+
+	<!-- Access environemnt variables -->
+	<property environment="env"/>
+	<!-- <property name="cxf.home" location ="${project.lib.dir}"/> -->
+
+	<!-- Use the properties from the props file -->
+	<property file="build.properties"/>
+	<path id="build.classpath">
+		<fileset dir="${project.lib.dir}">
+			<include name="**/*.jar"/>
+		</fileset>
+		<!--	<fileset dir="${cc.web-inf.dir}">
+			<include name="junit-4.8.2.jar"/>
+		</fileset>
+		<fileset dir="${cc.core.api.dir}">
+			<include name="gw-cc-plugin.jar"/>
+		</fileset>
+		<fileset dir="${cc.core.api.dir}">
+			<include name="gw-util.jar"/>
+		</fileset>
+		<fileset dir="${cc.core.api.dir}">
+		 <include name="gw-gosu-core-api.jar"/>
+		</fileset>
+		
+		<fileset dir="${cc.java.api.dir}">
+					<include name="gw-entity.jar"/>
+		</fileset> 
+		
+		<fileset dir="${ab.lib.dir}">
+			<include name="gw-plugin.jar"/>
+		</fileset> 
+		<fileset dir="${servlet.api.lib.dir}">
+			<include name="**/servlet.jar"/>
+		</fileset> -->
+
+	</path>
+
+	<!--
+	 **************************************************************************************
+	 * TARGET:  		usage
+	 * DESCRIPTION:		Defines the usage of the ant script
+	 * DEPENDENCIES: 	none
+	 **************************************************************************************
+	 -->
+	<target name="usage" description="Usage statement">
+		<echo message="Use one of the following targets: " />
+		<echo message="     'clean' - (Cleans the output directory.)" />
+		<echo message="     'compile' - (Compile the java source code.)" />
+		<echo message="     'jar' - (Generate the java application archive (JAR).)" />
+		<echo message="     'war' - (Generate the web application archive (WAR).)" />
+		<echo message="     'build-all-deploy-jar' - (Build the artifacts and deploy jars.)" />
+		<echo message="     'build-and-test-all-deploy-jar' - (Build the artifacts and deploy jars with tests.)" />
+		<echo message="     'test' - (Run unit test cases.)" />
+		<echo message="     'javadoc' - (Generate javadocs.)" />
+	</target>
+
+	<!--
+	 **************************************************************************************
+	 * TARGET:  		clean
+	 * DESCRIPTION:		Cleans the output directory.
+	 * DEPENDENCIES: 	none
+	 **************************************************************************************
+	 -->
+	<target name="clean" description="Clean the output directory">
+		<echo>Cleaning previous build artifacts ("clean" target)...</echo>
+		<mkdir dir="${project.classes.dir}"/>
+		<mkdir dir="${project.test.classes.dir}"/>
+		<delete quiet="false">
+			<fileset dir="${project.classes.dir}">
+				<include name="**/*.hql"/>
+				<include name="**/*.sql"/>
+				<include name="**/*.xml"/>
+				<include name="**/*.class"/>
+				<include name="**/*.properties"/>
+			</fileset>
+
+			<fileset dir="${project.test.classes.dir}">
+				<include name="**/*.hql"/>
+				<include name="**/*.sql"/>
+				<include name="**/*.xml"/>
+				<include name="**/*.class"/>
+				<include name="**/*.properties"/>
+			</fileset>
+		</delete>
+
+	</target>
+
+
+	<!--
+	 **************************************************************************************
+	 * TARGET:  		compile
+	 * DESCRIPTION:		Compile the java source code.
+	 * DEPENDENCIES: 	castor
+	 **************************************************************************************
+	 -->
+	<target name="compile"  depends="clean" description="Compile the java source code">
+		<echo>Compiling the source code ("compile" target)...</echo>
+		<mkdir dir="${project.classes.dir}"/>
+		<mkdir dir="${project.test.classes.dir}"/>
+
+		<javac fork="true" debug="true" destdir="${project.classes.dir}" classpathref="build.classpath"
+                memoryInitialSize="128m" memoryMaximumSize="256m">
+			<src path="${project.src.dir}"/>
+		</javac>
+
+		<javac fork="true" debug="true" destdir="${project.test.classes.dir}" classpathref="build.classpath"
+		                memoryInitialSize="128m" memoryMaximumSize="256m">
+			<classpath>
+				<pathelement path="${project.classes.dir}"/>
+				<path refid="build.classpath"/>
+			</classpath>
+			<src path="${project.test.src.dir}"/>
+		</javac>
+
+		<copy toDir="${project.classes.dir}">
+			<fileset dir="${project.src.dir}">
+				<include name="**/*.properties"/>
+				<include name="**/*.xml"/>
+				<include name="**/*.hql"/>
+				<include name="**/*.sql"/>
+				<include name="**/*.csv"/>
+				<include name="**/*.txt"/>
+			</fileset>
+		</copy>
+
+		<copy toDir="${project.test.classes.dir}">
+			<fileset dir="${project.test.src.dir}">
+				<include name="**/*.properties"/>
+				<include name="**/*.xml"/>
+				<include name="**/*.hql"/>
+				<include name="**/*.sql"/>
+				<include name="**/*.csv"/>
+				<include name="**/*.txt"/>
+			</fileset>
+		</copy>
+
+	</target>
+
+
+	<!--
+	 **************************************************************************************
+	 * TARGET:  		test
+	 * DESCRIPTION:		Run unit test cases.
+	 * DEPENDENCIES: 	compile
+	 **************************************************************************************
+	 -->
+	<target name="test" description="Run unit test cases">
+		<delete dir="${project.doc.test.results.dir}"/>
+		<mkdir dir="${project.doc.test.results.dir}"/>
+		<junit dir="${basedir}" printsummary="yes" fork="yes" haltonfailure="no" showoutput="yes">
+			<!-- classpath must include all jar dependencies and classes -->
+			<classpath location="${project.instrumented.classes.dir}" />
+			<classpath>
+				<pathelement path="${project.classes.dir}"/>
+				<path refid="build.classpath"/>
+			</classpath>
+			<classpath>
+				<pathelement path="${project.test.classes.dir}"/>
+				<path refid="build.classpath"/>
+			</classpath>
+			<formatter type="xml" usefile="true" />
+			<batchtest fork="yes" toDir="${project.doc.test.results.dir}">
+				<fileset dir="${project.test.classes.dir}" includes="**/*Test*.class">
+					<exclude name="**/AbstractTest*.class"/>
+				</fileset>
+			</batchtest>
+		</junit>
+		<junitreport todir="${project.doc.test.results.dir}">
+			<fileset dir="${project.doc.test.results.dir}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${project.doc.test.results.dir}" />
+		</junitreport>
+	</target>
+
+
+
+
+	<!--
+	 **************************************************************************************
+	 * TARGET:  		javadoc
+	 * DESCRIPTION:		Generate javadocs.
+	 * DEPENDENCIES: 	test
+	 **************************************************************************************
+	 -->
+	<target name="javadoc" description="Generate Javadocs">
+		<delete dir="${project.doc.dir}" quiet="true"/>
+		<mkdir dir="${project.doc.dir}"/>
+
+		<path id="javadoc.src.path" description="Source path for javadoc execution">
+			<pathelement location="${project.src.dir}"/>
+			<pathelement location="${project.test.src.dir}"/>
+		</path>
+
+		<javadoc packagenames="com.insurance.*"
+	    	excludepackagenames="" nodeprecated="yes" protected="false" version="true" author="true"
+	      	windowtitle="Integration Documentation" destdir="${project.doc.dir}">
+			<sourcepath refid="javadoc.src.path"/>
+			<classpath refid="build.classpath"/>
+			<doctitle>
+				<![CDATA[<h1>Integration Javadoc</h1>]]></doctitle>
+		<bottom>
+			<![CDATA[<i>Copyright &#169; 2016 Adaptra Group. All Rights Reserved.</i>]]></bottom>
+</javadoc>
+</target>
+
+<!--
+	 **************************************************************************************
+	 * TARGET:  		jar
+	 * DESCRIPTION:		Generate the java application archive (JAR).
+	 * DEPENDENCIES: 	compile
+	 **************************************************************************************
+	 -->
+<target name="jar" depends="compile" description="Generate the java application archive (JAR)">
+<echo>Creating deployable java application archive (JAR) ("jar" target)...</echo>
+<mkdir dir="${project.dist.dir}"/>
+<echoproperties/>
+
+<jar destfile="${project.dist.dir}/${project.appname}.jar">
+	<manifest>
+		<attribute name="GIT-Revision" value="${build.key}"/>
+		<attribute name="Build-No" value="${build.id}"/>
+	</manifest>
+	<metainf dir="src/resources" includes="cxf/org.apache.cxf.Logger"/>
+	<fileset dir="${project.classes.dir}">
+		<include name="**/*.*"/>
+	</fileset>
+</jar>
+</target>
+
+
+<target name="deploy-jar" depends="jar" description="Build the artifacts and deploy jars">
+<copy file="dist/${project.appname}.jar" toDir="${cc.gscript.lib.dir}"/>
+</target>
+
+
+<!--
+	 **************************************************************************************
+	 * TARGET:  		war
+	 * DESCRIPTION:		Generate the web application archive (WAR).
+	 * DEPENDENCIES: 	jar
+	 **************************************************************************************
+	 -->
+<target name="war" depends="jar" description="Generate the web application archive (WAR)">
+<echo>Creating deployable web application archive (WAR) ("war" target)...</echo>
+<mkdir dir="${project.dist.dir}"/>
+<war destfile="${project.dist.dir}/${project.appname}.war"
+			webxml="${project.web-inf.dir}/web.xml">
+	<fileset dir="${project.webapp.dir}">
+		<!--	<exclude name="**/*.properties"/> -->
+		<exclude name="**/web.xml"/>
+		<exclude name="**/*.class"/>
+		<exclude name="**/*.hbm.xml"/>
+		<exclude name="**/*.aegis.xml"/>
+		<exclude name="**/gw-axis.jar"/>
+		<!--	<exclude name="**/commons-logging*"/> -->
+	</fileset>
+	<lib dir="${cc.lib.dir}">
+		<include name="**/gw*.jar"/>
+		<exclude name="**/gw-axis.jar"/>
+	</lib>
+	<lib dir="${ab.lib.dir}">
+		<include name="**/*ab.jar"/>
+	</lib>
+	<lib dir="${project.dist.dir}">
+		<include name="**/Integration.jar"/>
+	</lib>
+	
+</war>
+</target>
+
+</project>
