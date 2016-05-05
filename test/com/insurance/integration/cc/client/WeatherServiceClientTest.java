@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import com.insurance.integration.domain.gen.weatherService.Weather;
 import com.insurance.integration.domain.gen.weatherService.WeatherReturn;
 import com.insurance.integration.domain.gen.weatherService.WeatherSoap;
 
