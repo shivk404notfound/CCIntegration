@@ -16,14 +16,14 @@ public class WeatherServiceClientTest {
 	@Test
 	public void testGetCityWeatherByZIP() {
 		WeatherServiceClient clientSpy = spy(new WeatherServiceClient());
-	    WeatherSoap mockWeatherService = mock(WeatherSoap.class);
+	        WeatherSoap mockWeatherService = mock(WeatherSoap.class);
 	 	WeatherReturn mockResult = mock(WeatherReturn.class);
 		when(mockResult.getDescription()).thenReturn("Cloudy");
 		when(mockResult.getCity()).thenReturn("San Francisco");
 		when(mockWeatherService.getCityWeatherByZIP("94101")).thenReturn(mockResult);
 		doReturn(mockWeatherService).when(clientSpy).getWeatherService(); 
 		doReturn(mockResult).when(mockWeatherService).getCityWeatherByZIP("94101");
-        WeatherReturn result = clientSpy.getCityWeatherByZIP("94101");
+                WeatherReturn result = clientSpy.getCityWeatherByZIP("94101");
 		assertEquals("Cloudy",result.getDescription()); 
 	} 
 }
